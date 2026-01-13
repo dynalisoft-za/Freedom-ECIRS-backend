@@ -64,8 +64,8 @@ sudo -u postgres psql
 
 # In PostgreSQL prompt:
 CREATE DATABASE freedom_ecirs;
-CREATE USER freedom_user WITH ENCRYPTED PASSWORD 'your_secure_password_here';
-GRANT ALL PRIVILEGES ON DATABASE freedom_ecirs TO freedom_user;
+CREATE USER alidev WITH ENCRYPTED PASSWORD 'your_secure_password_here';
+GRANT ALL PRIVILEGES ON DATABASE freedom_ecirs TO alidev;
 \q
 ```
 
@@ -97,7 +97,7 @@ sudo nano /etc/postgresql/15/main/pg_hba.conf
 Add:
 ```
 # Allow connections from your server IP
-host    freedom_ecirs    freedom_user    0.0.0.0/0    md5
+host    freedom_ecirs    alidev    0.0.0.0/0    md5
 ```
 
 Restart PostgreSQL:
@@ -125,11 +125,11 @@ npm --version
 
 ```bash
 # Create user for running the app
-sudo useradd -m -s /bin/bash freedom-api
+sudo useradd -m -s /bin/bash alidev
 
 # Create app directory
 sudo mkdir -p /opt/freedom-ecirs-backend
-sudo chown freedom-api:freedom-api /opt/freedom-ecirs-backend
+sudo chown alidev:alidev /opt/freedom-ecirs-backend
 ```
 
 ### Deploy Application
@@ -143,8 +143,8 @@ scp freedom-ecirs-backend.tar.gz user@your-server:/tmp/
 
 # On the server:
 cd /opt/freedom-ecirs-backend
-sudo -u freedom-api tar xzf /tmp/freedom-ecirs-backend.tar.gz --strip-components=1
-sudo -u freedom-api npm install
+sudo -u alidev tar xzf /tmp/freedom-ecirs-backend.tar.gz --strip-components=1
+sudo -u alidev npm install
 ```
 
 ---
@@ -153,13 +153,13 @@ sudo -u freedom-api npm install
 
 Create production `.env`:
 ```bash
-sudo -u freedom-api nano /opt/freedom-ecirs-backend/.env
+sudo -u alidev nano /opt/freedom-ecirs-backend/.env
 ```
 
 Add:
 ```env
 # Server Configuration
-PORT=3001
+PORT=3100
 HOST=0.0.0.0
 NODE_ENV=production
 
@@ -167,7 +167,7 @@ NODE_ENV=production
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_NAME=freedom_ecirs
-DATABASE_USER=freedom_user
+DATABASE_USER=alidev
 DATABASE_PASSWORD=your_secure_password_here
 
 # JWT Configuration (CHANGE THIS!)
@@ -189,7 +189,7 @@ openssl rand -base64 32
 ## Step 5: Initialize Database Schema
 
 ```bash
-sudo -u freedom-api psql -h localhost -U freedom_user -d freedom_ecirs -f /opt/freedom-ecirs-backend/database/schema.sql
+sudo -u alidev psql -h localhost -U alidev -d freedom_ecirs -f /opt/freedom-ecirs-backend/database/schema.sql
 ```
 
 Enter the password when prompted.
@@ -201,10 +201,10 @@ Enter the password when prompted.
 ```bash
 # Build TypeScript
 cd /opt/freedom-ecirs-backend
-sudo -u freedom-api npm run build
+sudo -u alidev npm run build
 
 # Test run
-sudo -u freedom-api npm start
+sudo -u alidev npm start
 
 # Press Ctrl+C after verifying it starts successfully
 ```
@@ -222,7 +222,7 @@ sudo npm install -g pm2
 ### Create PM2 Ecosystem File
 
 ```bash
-sudo -u freedom-api nano /opt/freedom-ecirs-backend/ecosystem.config.js
+sudo -u alidev nano /opt/freedom-ecirs-backend/ecosystem.config.js
 ```
 
 Add:
@@ -249,36 +249,36 @@ module.exports = {
 
 ```bash
 # Create logs directory
-sudo -u freedom-api mkdir -p /opt/freedom-ecirs-backend/logs
+sudo -u alidev mkdir -p /opt/freedom-ecirs-backend/logs
 
 # Start app
 cd /opt/freedom-ecirs-backend
-sudo -u freedom-api pm2 start ecosystem.config.js
+sudo -u alidev pm2 start ecosystem.config.js
 
 # Save PM2 configuration
-sudo -u freedom-api pm2 save
+sudo -u alidev pm2 save
 
 # Setup PM2 to start on boot
-sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u freedom-api --hp /home/freedom-api
+sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u alidev --hp /home/alidev
 ```
 
 ### PM2 Management Commands
 
 ```bash
 # Status
-sudo -u freedom-api pm2 status
+sudo -u alidev pm2 status
 
 # Logs
-sudo -u freedom-api pm2 logs freedom-ecirs-api
+sudo -u alidev pm2 logs freedom-ecirs-api
 
 # Restart
-sudo -u freedom-api pm2 restart freedom-ecirs-api
+sudo -u alidev pm2 restart freedom-ecirs-api
 
 # Stop
-sudo -u freedom-api pm2 stop freedom-ecirs-api
+sudo -u alidev pm2 stop freedom-ecirs-api
 
 # Monitor
-sudo -u freedom-api pm2 monit
+sudo -u alidev pm2 monit
 ```
 
 ---
@@ -309,7 +309,7 @@ server {
     location / {
         limit_req zone=api_limit burst=20 nodelay;
 
-        proxy_pass http://localhost:3001;
+        proxy_pass http://localhost:3100;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -393,7 +393,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 FILENAME="freedom_ecirs_$DATE.sql"
 
 mkdir -p $BACKUP_DIR
-pg_dump -h localhost -U freedom_user freedom_ecirs > "$BACKUP_DIR/$FILENAME"
+pg_dump -h localhost -U alidev freedom_ecirs > "$BACKUP_DIR/$FILENAME"
 gzip "$BACKUP_DIR/$FILENAME"
 
 # Keep only last 7 days
@@ -425,7 +425,7 @@ Add (runs daily at 2 AM):
 ### Application Logs
 ```bash
 # PM2 logs
-sudo -u freedom-api pm2 logs
+sudo -u alidev pm2 logs
 
 # Nginx access logs
 sudo tail -f /var/log/nginx/access.log
@@ -497,12 +497,12 @@ tar czf freedom-ecirs-backend.tar.gz Freedom-ECIRS-Backend/
 scp freedom-ecirs-backend.tar.gz user@your-server:/tmp/
 
 # On server
-sudo -u freedom-api pm2 stop freedom-ecirs-api
+sudo -u alidev pm2 stop freedom-ecirs-api
 cd /opt/freedom-ecirs-backend
-sudo -u freedom-api tar xzf /tmp/freedom-ecirs-backend.tar.gz --strip-components=1
-sudo -u freedom-api npm install
-sudo -u freedom-api npm run build
-sudo -u freedom-api pm2 restart freedom-ecirs-api
+sudo -u alidev tar xzf /tmp/freedom-ecirs-backend.tar.gz --strip-components=1
+sudo -u alidev npm install
+sudo -u alidev npm run build
+sudo -u alidev pm2 restart freedom-ecirs-api
 ```
 
 ---
@@ -512,10 +512,10 @@ sudo -u freedom-api pm2 restart freedom-ecirs-api
 ### App won't start
 ```bash
 # Check logs
-sudo -u freedom-api pm2 logs freedom-ecirs-api
+sudo -u alidev pm2 logs freedom-ecirs-api
 
 # Check database connection
-psql -h localhost -U freedom_user -d freedom_ecirs
+psql -h localhost -U alidev -d freedom_ecirs
 
 # Check if port is available
 sudo lsof -i :3001
@@ -527,7 +527,7 @@ sudo lsof -i :3001
 sudo systemctl status postgresql
 
 # Check if user can connect
-psql -h localhost -U freedom_user -d freedom_ecirs
+psql -h localhost -U alidev -d freedom_ecirs
 
 # Check pg_hba.conf settings
 sudo cat /etc/postgresql/15/main/pg_hba.conf
@@ -536,7 +536,7 @@ sudo cat /etc/postgresql/15/main/pg_hba.conf
 ### High memory usage
 ```bash
 # Restart app
-sudo -u freedom-api pm2 restart freedom-ecirs-api
+sudo -u alidev pm2 restart freedom-ecirs-api
 
 # Check PM2 memory limits in ecosystem.config.js
 ```
